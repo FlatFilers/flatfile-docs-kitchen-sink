@@ -89,6 +89,34 @@ export default function (listener) {
     );
   });
 
+  listener.filter({ job: "workbook:submitActionFg" }, (configure) => {
+    configure.on("job:ready", async ({ context: { jobId } }) => {
+      try {
+        await api.jobs.ack(jobId, {
+          info: "Gettin started.",
+          progress: 10,
+        });
+
+        //make changes after cells in a Sheet have been updated
+        console.log("make changes here when an action is clicked");
+
+        await api.jobs.complete(jobId, {
+          outcome: {
+            message: "This job is now complete.",
+          },
+        });
+      } catch (error) {
+        console.error("Error:", error.stack);
+
+        await api.jobs.fail(jobId, {
+          outcome: {
+            message: "This job encountered an error.",
+          },
+        });
+      }
+    });
+  });
+
   listener.filter({ sheet: "Contacts" }, (configure) => {
     listener.on("commit:created", async (event) => {
       //make changes after cells in a Sheet have been updated

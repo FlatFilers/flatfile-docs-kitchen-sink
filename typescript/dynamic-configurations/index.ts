@@ -90,6 +90,40 @@ export default function (listener: Client) {
     );
   });
 
+  listener.filter(
+    { job: "workbook:submitActionFg" },
+    (configure: FlatfileListener) => {
+      configure.on(
+        "job:ready",
+        async ({ context: { jobId } }: FlatfileEvent) => {
+          try {
+            await api.jobs.ack(jobId, {
+              info: "Gettin started.",
+              progress: 10,
+            });
+
+            //make changes after cells in a Sheet have been updated
+            console.log("make changes here when an action is clicked");
+
+            await api.jobs.complete(jobId, {
+              outcome: {
+                message: "This job is now complete.",
+              },
+            });
+          } catch (error) {
+            console.error("Error:", error.stack);
+
+            await api.jobs.fail(jobId, {
+              outcome: {
+                message: "This job encountered an error.",
+              },
+            });
+          }
+        }
+      );
+    }
+  );
+
   listener.filter({ sheet: "Contacts" }, (configure: FlatfileListener) => {
     listener.on("commit:created", async (event: FlatfileEvent) => {
       //make changes after cells in a Sheet have been updated
