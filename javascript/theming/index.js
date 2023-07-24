@@ -15,7 +15,7 @@ export default function flatfileEventListener(listener) {
           spaceId,
           environmentId,
           name: "All Data",
-          labels: ["primary"],
+          labels: ["pinned"],
           sheets: [
             {
               name: "Contacts",
