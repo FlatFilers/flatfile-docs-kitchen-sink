@@ -1,11 +1,11 @@
 {
-  "name": "gettingstarted",
+  "name": "docs-kitchen-sink",
   "version": "1.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "typescript/theming/index.ts",
   "scripts": {
-    "dev": "flatfile develop index.js",
-    "deploy": "flatfile deploy index.js"
+    "dev": "flatfile develop typescript/theming/index.ts",
+    "deploy": "flatfile deploy typescript/theming/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +14,7 @@
     "@flatfile/api": "1.5.19",
     "@flatfile/listener": "0.3.11",
     "@flatfile/plugin-record-hook": "0.1.11",
+    "@flatfile/plugin-json-extractor": "0.1.0",
     "axios": "^1.4.0",
     "flatfile": "^3.5.8"
   },

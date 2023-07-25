@@ -1,6 +1,6 @@
 import { FlatfileListener, FlatfileEvent, Client } from "@flatfile/listener";
 import api from "@flatfile/api";
-
+import { jsonExtractorPlugin } from "@flatfile/plugin-json-extractor";
 
 export default function flatfileEventListener(listener: Client) {
   //configure space initially
@@ -72,28 +72,5 @@ export default function flatfileEventListener(listener: Client) {
       }
     );
   });
-
-  //update space after created
-  //you can also do this during configuration
-  listener.on(
-    "space:created",
-    async ({ context: { spaceId, environmentId } }: FlatfileEvent) => {
-      //const updateSpace = await flatfile.spaces.update(spaceId, {});
-
-      const updateSpace = await api.spaces.update(spaceId, {
-        environmentId,
-        metadata: {
-          theme: {
-            root: {
-              primaryColor: "red",
-            },
-            sidebar: {
-              logo: "https://image.png",
-            },
-            // See reference for all possible variables
-          },
-        },
-      });
-    }
-  );
+  listener.use(jsonExtractorPlugin());
 }
