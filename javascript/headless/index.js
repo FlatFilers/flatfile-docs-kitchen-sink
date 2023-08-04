@@ -1,14 +1,13 @@
 import api from "@flatfile/api";
-import { Client, FlatfileEvent } from "@flatfile/listener";
 import { automap } from "@flatfile/plugin-automap";
-import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
+import {recordHook } from "@flatfile/plugin-record-hook";
 import { ExcelExtractor } from "@flatfile/plugin-xlsx-extractor";
 import nodemailer from "nodemailer";
 import { promisify } from "util";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener) {
   // 1.Create a Workbook
-  listener.on("space:created", async (event: FlatfileEvent) => {
+  listener.on("space:created", async (event) => {
     const { spaceId, environmentId } = event.context;
 
     // Date included in workbook name
@@ -96,15 +95,15 @@ export default function flatfileEventListener(listener: Client) {
   listener.use(
     recordHook(
       "inventory",
-      async (record: FlatfileRecord, event: FlatfileEvent) => {
+      async (record, event) => {
         const author = record.get("author");
         function validateNameFormat(name) {
-          const pattern: RegExp = /^\s*[\p{L}'-]+\s*,\s*[\p{L}'-]+\s*$/u;
+          const pattern = /^\s*[\p{L}'-]+\s*,\s*[\p{L}'-]+\s*$/u;
           return pattern.test(name);
         }
 
         if (!validateNameFormat(author)) {
-          const nameSplit = (author as string).split(" ");
+          const nameSplit = (author).split(" ");
           record.set("author", `${nameSplit[1]}, ${nameSplit[0]}`);
           record.addComment("author", "Author name was updated for vendor");
           return record;
@@ -115,7 +114,7 @@ export default function flatfileEventListener(listener: Client) {
 
   // 4. Automate Egress
   listener.filter({ job: "workbook:map" }, (configure) => {
-    configure.on("job:completed", async (event: FlatfileEvent) => {
+    configure.on("job:completed", async (event) => {
       // Fetch the email and password from the secrets store
       const email = await event.secrets("email");
       const password = await event.secrets("password");
@@ -128,7 +127,7 @@ export default function flatfileEventListener(listener: Client) {
       const currentInventory = await api.records.get(inventorySheet);
       const purchaseInventory = currentInventory.data.records.map((item) => {
         const stockValue = item.values.stock.value;
-        const stockOrder = Math.max(3 - (stockValue as number), 0); 
+        const stockOrder = Math.max(3 - stockValue, 0); 
         item.values.purchase = {
           value: stockOrder,
           valid: true,
@@ -136,7 +135,7 @@ export default function flatfileEventListener(listener: Client) {
         const { stock, ...fields } = item.values;
         return fields;
       });
-      const purchaseOrder = purchaseInventory.filter((item) => (item.purchase.value as number) > 0);
+      const purchaseOrder = purchaseInventory.filter((item) => item.purchase.value > 0);
 
       await api.records.insert(orderSheet, purchaseOrder);
 
@@ -153,7 +152,7 @@ export default function flatfileEventListener(listener: Client) {
       });
       const mailOptions = {
         from: email,
-        to: "warehouse@books.com", // Configure for desired recipient
+        to: email, // Configure for desired recipient
         subject: "Purchase Order",
         text: "Attached",
         attachments: [
