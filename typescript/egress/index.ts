@@ -1,12 +1,13 @@
 import api from "@flatfile/api";
 import axios from "axios";
+import { FlatfileListener, FlatfileEvent, Client } from "@flatfile/listener";
 
-export default function flatfileEventListener(listener) {
+export default function flatfileEventListener(listener: Client) {
   //workbook-level action
-  listener.filter({ job: "workbook:submitActionFg" }, (configure) => {
+  listener.filter({ job: "workbook:submitActionFg" }, (configure: FlatfileListener) => {
     configure.on(
       "job:ready",
-      async ({ context: { jobId, workbookId }, payload }) => {
+      async ({ context: { jobId, workbookId }, payload }: FlatfileEvent) => {
         const { data: sheets } = await api.sheets.list({ workbookId });
 
         const records = {};
