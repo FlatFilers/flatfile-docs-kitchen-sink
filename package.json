@@ -11,12 +11,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@flatfile/api": "1.5.19",
+    "@flatfile/api": "^1.5.19",
     "@flatfile/listener": "0.3.11",
-    "@flatfile/plugin-record-hook": "0.1.11",
+    "@flatfile/plugin-automap": "^0.0.2",
     "@flatfile/plugin-json-extractor": "0.1.0",
+    "@flatfile/plugin-record-hook": "^0.2.0",
+    "@flatfile/plugin-xlsx-extractor": "^1.2.0",
     "axios": "^1.4.0",
-    "flatfile": "^3.5.8"
+    "flatfile": "^3.5.8",
+    "nodemailer": "^6.9.4"
   },
   "devDependencies": {
     "@types/node": "^18.16.0"
