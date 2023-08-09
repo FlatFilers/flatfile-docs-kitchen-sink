@@ -7,12 +7,12 @@ import { ExcelExtractor } from "@flatfile/plugin-xlsx-extractor";
 import { XMLExtractor } from "@flatfile/plugin-xml-extractor";
 import { ZipExtractor } from "@flatfile/plugin-zip-extractor";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener) {
   //configure space initially
-  listener.filter({ job: "space:configure" }, (configure: FlatfileListener) => {
+  listener.filter({ job: "space:configure" }, (configure) => {
     configure.on(
       "job:ready",
-      async ({ context: { spaceId, environmentId, jobId } }: FlatfileEvent) => {
+      async ({ context: { spaceId, environmentId, jobId } }) => {
         await api.jobs.ack(jobId, {
           info: "Gettin started.",
           progress: 10,
