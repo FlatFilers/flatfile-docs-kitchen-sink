@@ -1,0 +1,58 @@
+import { Client, FlatfileListener } from "@flatfile/listener";
+import api from "@flatfile/api";
+
+export default function flatfileEventListener(listener) {
+  listener.namespace(["space:red"], (red) => {
+    red.filter({ job: "space:configure" }, (configure) => {
+      configure.on(
+        "job:ready",
+        async ({ context: { spaceId, environmentId, jobId } }) => {
+          try {
+            await api.jobs.ack(jobId, {
+              info: "Gettin started.",
+              progress: 10,
+            });
+
+            //create your workbooks here
+
+            await api.documents.create(spaceId, {
+              title: "Getting Started in the Contacts Space",
+              body: "# Welcome to your swanky new Red Space\n" + "---\n",
+            });
+
+            await api.spaces.update(spaceId, {
+              environmentId,
+              metadata: {
+                theme: {
+                  root: {
+                    primaryColor: "red",
+                  },
+                  sidebar: {
+                    backgroundColor: "red",
+                    textColor: "white",
+                    activeTextColor: "midnightblue",
+                  },
+                  // See reference for all possible variables
+                },
+              },
+            });
+
+            await api.jobs.complete(jobId, {
+              outcome: {
+                message: "This job is now complete.",
+              },
+            });
+          } catch (error) {
+            console.error("Error:", error.stack);
+
+            await api.jobs.fail(jobId, {
+              outcome: {
+                message: "This job encountered an error.",
+              },
+            });
+          }
+        }
+      );
+    });
+  });
+}
