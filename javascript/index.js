@@ -95,6 +95,75 @@ export default function flatfileEventListener(listener) {
       }
     });
   });
+
+  listener.filter({ job: "space:configure" }, (configure) => {
+    configure.on(
+      "job:ready",
+      async ({ context: { spaceId, environmentId, jobId } }) => {
+        await api.jobs.ack(jobId, {
+          info: "Gettin started.",
+          progress: 10,
+        });
+
+        await api.workbooks.create({
+          spaceId,
+          environmentId,
+          name: "All Data",
+          labels: ["pinned"],
+          sheets: [
+            {
+              name: "Contacts",
+              slug: "contacts",
+              fields: [
+                {
+                  key: "firstName",
+                  type: "string",
+                  label: "First Name",
+                },
+                {
+                  key: "lastName",
+                  type: "string",
+                  label: "Last Name",
+                },
+                {
+                  key: "email",
+                  type: "string",
+                  label: "Email",
+                },
+              ],
+              actions: [
+                {
+                  operation: "duplicate",
+                  mode: "background",
+                  label: "Duplicate Sheet",
+                  type: "string",
+                  description:
+                    "Duplicate this Sheet and lock down the original.",
+                  primary: true,
+                },
+              ],
+            },
+          ],
+          actions: [
+            {
+              operation: "submitActionFg",
+              mode: "foreground",
+              label: "Submit foreground",
+              type: "string",
+              description: "Submit data to webhook.site",
+              primary: true,
+            },
+          ],
+        });
+
+        await api.jobs.complete(jobId, {
+          outcome: {
+            message: "This job is now complete.",
+          },
+        });
+      }
+    );
+  });
 }
 
 // You can see the full example used in our getting started guide in ./full-example.js
