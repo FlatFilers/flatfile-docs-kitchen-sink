@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@flatfile/api": "^1.5.20",
+    "@flatfile/listener": "^0.3.14",
+    "@flatfile/plugin-delimiter-extractor": "^0.4.0",
+    "@flatfile/plugin-json-extractor": "^0.4.2",
+    "@flatfile/plugin-record-hook": "^1.0.1",
+    "@flatfile/plugin-xlsx-extractor": "^1.5.0",
+    "@flatfile/plugin-xml-extractor": "^0.3.0",
+    "@flatfile/plugin-zip-extractor": "^0.3.1"
+  }
+}
