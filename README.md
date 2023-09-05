@@ -19,7 +19,3 @@ If using typescript, run `npx flatfile develop typescript/<path-to-file>.ts` to 
 ## Deploying
 
 Use `npx flatfile deploy <file name>` to deploy your listener to Flatfile.
-
-## See all code examples
-
-To see all of the code examples from the docs, head to the [flatfile-docs-kitchen-sink](https://github.com/FlatFilers/flatfile-docs-kitchen-sink) repo.
