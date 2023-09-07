@@ -136,10 +136,8 @@ export default function flatfileEventListener(listener) {
                   operation: "duplicate",
                   mode: "background",
                   label: "Duplicate Sheet",
-                  type: "string",
                   description:
                     "Duplicate this Sheet and lock down the original.",
-                  primary: true,
                 },
               ],
             },

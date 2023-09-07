@@ -1,5 +1,6 @@
 import api from "@flatfile/api";
 import { FlatfileListener, FlatfileEvent, Client } from "@flatfile/listener";
+import { recordHook, FlatfileRecord } from "@flatfile/plugin-record-hook";
 
 export default function (listener: Client) {
   listener.filter({ job: "space:configure" }, (configure: FlatfileListener) => {
@@ -40,13 +41,33 @@ export default function (listener: Client) {
                 ],
                 actions: [
                   {
-                    operation: "duplicate",
+                    operation: "sendToPeople",
                     mode: "background",
-                    label: "Duplicate Sheet",
-                    description:
-                      "Duplicate this Sheet and lock down the original.",
-                    requireSelection: false,
-                    requireAllValid: true,
+                    label: "Send to selected People",
+                    description: "Send this data to those selected.",
+                    requireSelection: true,
+                    requireAllValid: false,
+                  },
+                ],
+              },
+              {
+                name: "Sheet 2",
+                slug: "sheet2",
+                fields: [
+                  {
+                    key: "firstName",
+                    type: "string",
+                    label: "First Name",
+                  },
+                  {
+                    key: "lastName",
+                    type: "string",
+                    label: "Last Name",
+                  },
+                  {
+                    key: "email",
+                    type: "string",
+                    label: "Email",
                   },
                 ],
               },
@@ -62,7 +83,7 @@ export default function (listener: Client) {
             ],
           });
 
-          await api.documents.create(spaceId, {
+          const doc = await api.documents.create(spaceId, {
             title: "Getting Started",
             body:
               "# Welcome\n" +
@@ -73,7 +94,8 @@ export default function (listener: Client) {
 
           await api.jobs.complete(jobId, {
             outcome: {
-              message: "This job is now complete.",
+              message: "Your Space was created. Let's get started.",
+              acknowledge: true,
             },
           });
         } catch (error) {
@@ -81,7 +103,8 @@ export default function (listener: Client) {
 
           await api.jobs.fail(jobId, {
             outcome: {
-              message: "This job encountered an error.",
+              message: "Creating a Space encountered an error. See Event Logs.",
+              acknowledge: true,
             },
           });
         }
@@ -94,7 +117,7 @@ export default function (listener: Client) {
     (configure: FlatfileListener) => {
       configure.on(
         "job:ready",
-        async ({ context: { jobId } }: FlatfileEvent) => {
+        async ({ context: { jobId, workbookId } }: FlatfileEvent) => {
           try {
             await api.jobs.ack(jobId, {
               info: "Gettin started.",
@@ -104,9 +127,17 @@ export default function (listener: Client) {
             //make changes after cells in a Sheet have been updated
             console.log("make changes here when an action is clicked");
 
+            //todo: get the workbook and sheets here
+            const sheet2 = "us_sh_8XFdltuj";
+
             await api.jobs.complete(jobId, {
               outcome: {
-                message: "This job is now complete.",
+                message: "Submit is now complete.",
+                next: {
+                  type: "id",
+                  id: sheet2,
+                  label: "Next: Review Sheet 2",
+                },
               },
             });
           } catch (error) {
@@ -129,4 +160,22 @@ export default function (listener: Client) {
       console.log("made it here");
     });
   });
+
+  listener.use(
+    recordHook("contacts", (record: FlatfileRecord) => {
+      const value = record.get("firstName");
+      if (typeof value === "string") {
+        record.set("firstName", value.toLowerCase());
+      }
+
+      const email = record.get("email") as string;
+      const validEmailAddress = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!validEmailAddress.test(email)) {
+        console.log("Invalid email address");
+        record.addError("email", "Invalid email address");
+      }
+
+      return record;
+    })
+  );
 }
