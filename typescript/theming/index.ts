@@ -1,7 +1,6 @@
 import { FlatfileListener, FlatfileEvent, Client } from "@flatfile/listener";
 import api from "@flatfile/api";
 
-
 export default function flatfileEventListener(listener: Client) {
   //configure space initially
   listener.filter({ job: "space:configure" }, (configure: FlatfileListener) => {
@@ -44,10 +43,10 @@ export default function flatfileEventListener(listener: Client) {
                   operation: "duplicate",
                   mode: "background",
                   label: "Duplicate Sheet",
-                  type: "string",
                   description:
                     "Duplicate this Sheet and lock down the original.",
-                  primary: true,
+                  requireSelection: false,
+                  requireAllValid: true,
                 },
               ],
             },
@@ -57,7 +56,6 @@ export default function flatfileEventListener(listener: Client) {
               operation: "submitActionFg",
               mode: "foreground",
               label: "Submit foreground",
-              type: "string",
               description: "Submit data to webhook.site",
               primary: true,
             },
