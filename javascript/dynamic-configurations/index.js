@@ -42,10 +42,10 @@ export default function (listener) {
                     operation: "duplicate",
                     mode: "background",
                     label: "Duplicate Sheet",
-                    type: "string",
                     description:
                       "Duplicate this Sheet and lock down the original.",
-                    primary: true,
+                    requireSelection: false,
+                    requireAllValid: true,
                   },
                 ],
               },
@@ -55,7 +55,6 @@ export default function (listener) {
                 operation: "submitActionFg",
                 mode: "foreground",
                 label: "Submit foreground",
-                type: "string",
                 description: "Submit data to webhook.site",
                 primary: true,
               },
@@ -73,7 +72,8 @@ export default function (listener) {
 
           await api.jobs.complete(jobId, {
             outcome: {
-              message: "This job is now complete.",
+              message: "Your Space was created.",
+              acknowledge: true,
             },
           });
         } catch (error) {
@@ -81,7 +81,8 @@ export default function (listener) {
 
           await api.jobs.fail(jobId, {
             outcome: {
-              message: "This job encountered an error.",
+              message: "Creating a Space encountered an error. See Event Logs.",
+              acknowledge: true,
             },
           });
         }

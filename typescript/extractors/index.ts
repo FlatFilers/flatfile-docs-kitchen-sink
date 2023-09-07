@@ -49,10 +49,8 @@ export default function flatfileEventListener(listener: Client) {
                   operation: "duplicate",
                   mode: "background",
                   label: "Duplicate Sheet",
-                  type: "string",
                   description:
                     "Duplicate this Sheet and lock down the original.",
-                  primary: true,
                 },
               ],
             },
@@ -62,7 +60,6 @@ export default function flatfileEventListener(listener: Client) {
               operation: "submitActionFg",
               mode: "foreground",
               label: "Submit foreground",
-              type: "string",
               description: "Submit data to webhook.site",
               primary: true,
             },
