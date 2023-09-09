@@ -114,8 +114,9 @@ export default function flatfileEventListener(listener: Client) {
   );
 
   // 4. Automate Egress
-  listener.filter({ job: "workbook:map" }, (configure) => {
-    configure.on("job:completed", async (event: FlatfileEvent) => {
+  listener
+    .filter({ job: "workbook:map" })
+    .on("job:completed", async (event: FlatfileEvent) => {
       // Fetch the email and password from the secrets store
       const email = await event.secrets("email");
       const password = await event.secrets("password");
@@ -128,7 +129,7 @@ export default function flatfileEventListener(listener: Client) {
       const currentInventory = await api.records.get(inventorySheet);
       const purchaseInventory = currentInventory.data.records.map((item) => {
         const stockValue = item.values.stock.value;
-        const stockOrder = Math.max(3 - (stockValue as number), 0); 
+        const stockOrder = Math.max(3 - (stockValue as number), 0);
         item.values.purchase = {
           value: stockOrder,
           valid: true,
@@ -136,7 +137,9 @@ export default function flatfileEventListener(listener: Client) {
         const { stock, ...fields } = item.values;
         return fields;
       });
-      const purchaseOrder = purchaseInventory.filter((item) => (item.purchase.value as number) > 0);
+      const purchaseOrder = purchaseInventory.filter(
+        (item) => (item.purchase.value as number) > 0
+      );
 
       await api.records.insert(orderSheet, purchaseOrder);
 
@@ -166,5 +169,4 @@ export default function flatfileEventListener(listener: Client) {
       const sendMail = promisify(transporter.sendMail.bind(transporter));
       await sendMail(mailOptions);
     });
-  });
 }
