@@ -1,19 +1,27 @@
 import api from "@flatfile/api";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
+import { responseRejectionHandler } from "@flatfile/util-response-rejection";
 import axios from "axios";
-import { FlatfileListener, FlatfileEvent, Client } from "@flatfile/listener";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener: FlatfileListener) {
   listener.filter(
     { job: "workbook:submitActionFg" },
     (configure: FlatfileListener) => {
       configure.on(
         "job:ready",
         async ({ context: { jobId, workbookId }, payload }: FlatfileEvent) => {
-          const { data: sheets } = await api.sheets.list({ workbookId });
+          const { data: workbook } = await api.sheets.list({ workbookId });
+          const { data: workbookSheets } = await api.sheets.list({
+            workbookId,
+          });
 
-          const records: { [name: string]: any } = {};
-          for (const [index, element] of sheets.entries()) {
-            records[`Sheet[${index}]`] = await api.records.get(element.id);
+          const sheets = [];
+          for (const [_, element] of workbookSheets.entries()) {
+            const { data: records } = await api.records.get(element.id);
+            sheets.push({
+              ...element,
+              ...records,
+            });
           }
 
           try {
@@ -22,7 +30,7 @@ export default function flatfileEventListener(listener: Client) {
               progress: 10,
             });
 
-            console.log(JSON.stringify(records, null, 2));
+            console.log(JSON.stringify(sheets, null, 2));
 
             const webhookReceiver =
               process.env.WEBHOOK_SITE_URL ||
@@ -33,8 +41,10 @@ export default function flatfileEventListener(listener: Client) {
               {
                 ...payload,
                 method: "axios",
-                sheets,
-                records,
+                workbook: {
+                  ...workbook,
+                  sheets,
+                },
               },
               {
                 headers: {
@@ -44,7 +54,23 @@ export default function flatfileEventListener(listener: Client) {
             );
 
             if (response.status === 200) {
-              await api.jobs.complete(jobId, {
+              const rejections = response.data.rejections;
+              if (rejections) {
+                const totalRejectedRecords = await responseRejectionHandler(
+                  rejections
+                );
+                return await api.jobs.complete(jobId, {
+                  outcome: {
+                    next: {
+                      type: "id",
+                      id: rejections.id,
+                      label: "See rejections...",
+                    },
+                    message: `Data was submission was partially successful. ${totalRejectedRecords} record(s) were rejected.`,
+                  },
+                });
+              }
+              return await api.jobs.complete(jobId, {
                 outcome: {
                   message:
                     "Data was successfully submitted to webhook.site. Go check it out at " +
