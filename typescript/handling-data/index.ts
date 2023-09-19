@@ -1,8 +1,8 @@
-import { Client, FlatfileEvent } from "@flatfile/listener";
-import { recordHook, FlatfileRecord } from "@flatfile/plugin-record-hook";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
+import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
 import axios from "axios";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener: FlatfileListener) {
   listener.use(
     recordHook("contacts", (record: FlatfileRecord) => {
       //FlatfileRecord.compute

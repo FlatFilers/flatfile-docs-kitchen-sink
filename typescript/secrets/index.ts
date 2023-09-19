@@ -1,6 +1,6 @@
-import { FlatfileEvent, Client } from "@flatfile/listener";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener: FlatfileListener) {
   listener.on("**", async (event: FlatfileEvent) => {
     // Hardcode specific environment and space for this listener's case
     const credential = await event.secrets("SLACK_TOKEN", {

@@ -1,6 +1,5 @@
+import api, { Flatfile } from "@flatfile/api";
 import axios from "axios";
-import api from "@flatfile/api";
-import { Flatfile } from "@flatfile/api";
 import FormData from "form-data";
 
 const apiUrl =
@@ -48,8 +47,10 @@ export default function flatfileEventListener(listener) {
     });
   });
 
-  listener.filter({ job: "file:logFileContents" }, (configure) => {
-    configure.on("job:ready", async ({ context: { fileId, jobId } }) => {
+  listener.on(
+    "job:ready",
+    { job: "file:logFileContents" },
+    async ({ context: { fileId, jobId } }) => {
       await api.jobs.ack(jobId, {
         info: "Getting started.",
         progress: 10,
@@ -63,52 +64,51 @@ export default function flatfileEventListener(listener) {
           message: "Logging file contents is complete.",
         },
       });
-    });
-  });
+    }
+  );
 
-  listener.filter({ job: "file:decryptAction" }, (configure) => {
-    configure.on(
-      "job:ready",
-      async ({ context: { spaceId, fileId, jobId, environmentId } }) => {
-        try {
-          await api.jobs.ack(jobId, {
-            info: "Getting started.",
-            progress: 10,
-          });
+  listener.on(
+    "job:ready",
+    { job: "file:decryptAction" },
+    async ({ context: { spaceId, fileId, jobId, environmentId } }) => {
+      try {
+        await api.jobs.ack(jobId, {
+          info: "Getting started.",
+          progress: 10,
+        });
 
-          const fileResponse = await api.files.get(fileId);
-          const buffer = await getFileBufferFromApi(fileId);
-          const { name, ext } = fileResponse.data;
-          const newFileName = name
-            ? `${name.split(".")[0]}[Decrypted].${ext}`
-            : "DecryptedFile.csv";
+        const fileResponse = await api.files.get(fileId);
+        const buffer = await getFileBufferFromApi(fileId);
+        const { name, ext } = fileResponse.data;
+        const newFileName = name
+          ? `${name.split(".")[0]}[Decrypted].${ext}`
+          : "DecryptedFile.csv";
 
-          const formData = new FormData();
-          formData.append("file", buffer, { filename: newFileName });
-          formData.append("spaceId", spaceId);
-          formData.append("environmentId", environmentId);
+        const formData = new FormData();
+        formData.append("file", buffer, { filename: newFileName });
+        formData.append("spaceId", spaceId);
+        formData.append("environmentId", environmentId);
 
-          await axios.post(`${apiUrl}/v1/files/`, formData, {
-            headers: {
-              ...formData.getHeaders(),
-              Authorization: `Bearer ${apiKey}`,
-            },
-            transformRequest: () => formData,
-          });
+        await axios.post(`${apiUrl}/v1/files/`, formData, {
+          headers: {
+            ...formData.getHeaders(),
+            Authorization: `Bearer ${apiKey}`,
+          },
+          transformRequest: () => formData,
+        });
 
-          await api.jobs.complete(jobId, {
-            outcome: {
-              message: "Decrypting is now complete.",
-            },
-          });
-        } catch (e) {
-          await api.jobs.fail(jobId, {
-            outcome: {
-              message: "The decryption job failed.",
-            },
-          });
-        }
+        await api.jobs.complete(jobId, {
+          outcome: {
+            message: "Decrypting is now complete.",
+          },
+        });
+      } catch (e) {
+        await api.jobs.fail(jobId, {
+          outcome: {
+            message: "The decryption job failed.",
+          },
+        });
       }
-    );
-  });
+    }
+  );
 }
