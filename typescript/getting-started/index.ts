@@ -3,11 +3,11 @@
  */
 
 import api from "@flatfile/api";
-import { Client, FlatfileEvent } from "@flatfile/listener";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
 import axios from "axios";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener: FlatfileListener) {
   /**
    * Part 1 example
    */
