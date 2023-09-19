@@ -1,11 +1,12 @@
-import { Client, FlatfileListener, FlatfileEvent } from "@flatfile/listener";
 import api from "@flatfile/api";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener: FlatfileListener) {
   listener.namespace(["space:red"], (red: FlatfileListener) => {
-    red
-      .filter({ job: "space:configure" })
-      .on("job:ready", async (event: FlatfileEvent) => {
+    red.on(
+      "job:ready",
+      { job: "space:configure" },
+      async (event: FlatfileEvent) => {
         const { spaceId, environmentId, jobId } = event.context;
         try {
           await api.jobs.ack(jobId, {
@@ -51,6 +52,7 @@ export default function flatfileEventListener(listener: Client) {
             },
           });
         }
-      });
+      }
+    );
   });
 }

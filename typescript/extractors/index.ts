@@ -1,5 +1,5 @@
-import { FlatfileListener, FlatfileEvent, Client } from "@flatfile/listener";
 import api from "@flatfile/api";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 
 import { DelimiterExtractor } from "@flatfile/plugin-delimiter-extractor";
 import { JSONExtractor } from "@flatfile/plugin-json-extractor";
@@ -7,11 +7,12 @@ import { ExcelExtractor } from "@flatfile/plugin-xlsx-extractor";
 import { XMLExtractor } from "@flatfile/plugin-xml-extractor";
 import { ZipExtractor } from "@flatfile/plugin-zip-extractor";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener: FlatfileListener) {
   //configure space initially
-  listener
-    .filter({ job: "space:configure" })
-    .on("job:ready", async (event: FlatfileEvent) => {
+  listener.on(
+    "job:ready",
+    { job: "space:configure" },
+    async (event: FlatfileEvent) => {
       const { spaceId, environmentId, jobId } = event.context;
       await api.jobs.ack(jobId, {
         info: "Gettin started.",
@@ -70,7 +71,8 @@ export default function flatfileEventListener(listener: Client) {
           message: "This job is now complete.",
         },
       });
-    });
+    }
+  );
 
   //add file support
   listener.use(JSONExtractor());

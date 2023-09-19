@@ -1,11 +1,12 @@
 import api from "@flatfile/api";
-import { FlatfileListener, FlatfileEvent, Client } from "@flatfile/listener";
-import { recordHook, FlatfileRecord } from "@flatfile/plugin-record-hook";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
+import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
 
-export default function (listener: Client) {
-  listener
-    .filter({ job: "space:configure" })
-    .on("job:ready", async (event: FlatfileEvent) => {
+export default function (listener: FlatfileListener) {
+  listener.on(
+    "job:ready",
+    { job: "space:configure" },
+    async (event: FlatfileEvent) => {
       const { spaceId, environmentId, jobId } = event.context;
       try {
         await api.jobs.ack(jobId, {
@@ -108,11 +109,13 @@ export default function (listener: Client) {
           },
         });
       }
-    });
+    }
+  );
 
-  listener
-    .filter({ job: "workbook:submitActionFg" })
-    .on("job:ready", async (event: FlatfileEvent) => {
+  listener.on(
+    "job:ready",
+    { job: "workbook:submitActionFg" },
+    async (event: FlatfileEvent) => {
       const { workbookId, jobId } = event.context;
 
       try {
@@ -146,14 +149,17 @@ export default function (listener: Client) {
           },
         });
       }
-    });
+    }
+  );
 
-  listener
-    .filter({ sheet: "Contacts" })
-    .on("commit:created", async (event: FlatfileEvent) => {
+  listener.on(
+    "commit:created",
+    { sheet: "Contacts" },
+    async (event: FlatfileEvent) => {
       //make changes after cells in a Sheet have been updated
       console.log("made it here");
-    });
+    }
+  );
 
   listener.use(
     recordHook("contacts", (record: FlatfileRecord) => {

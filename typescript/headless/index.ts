@@ -1,12 +1,12 @@
 import api from "@flatfile/api";
-import { Client, FlatfileEvent } from "@flatfile/listener";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import { automap } from "@flatfile/plugin-automap";
 import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
 import { ExcelExtractor } from "@flatfile/plugin-xlsx-extractor";
 import nodemailer from "nodemailer";
 import { promisify } from "util";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener: FlatfileListener) {
   // 1.Create a Workbook
   listener.on("space:created", async (event: FlatfileEvent) => {
     const { spaceId, environmentId } = event.context;
@@ -114,9 +114,10 @@ export default function flatfileEventListener(listener: Client) {
   );
 
   // 4. Automate Egress
-  listener
-    .filter({ job: "workbook:map" })
-    .on("job:completed", async (event: FlatfileEvent) => {
+  listener.on(
+    "job:completed",
+    { job: "workbook:map" },
+    async (event: FlatfileEvent) => {
       // Fetch the email and password from the secrets store
       const email = await event.secrets("email");
       const password = await event.secrets("password");
@@ -168,5 +169,6 @@ export default function flatfileEventListener(listener: Client) {
       };
       const sendMail = promisify(transporter.sendMail.bind(transporter));
       await sendMail(mailOptions);
-    });
+    }
+  );
 }

@@ -1,12 +1,13 @@
 import api from "@flatfile/api";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import axios from "axios";
-import { FlatfileListener, FlatfileEvent, Client } from "@flatfile/listener";
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener: FlatfileListener) {
   //workbook-level action
-  listener
-    .filter({ job: "workbook:submitActionFg" })
-    .on("job:ready", async (event: FlatfileEvent) => {
+  listener.on(
+    "job:ready",
+    { job: "workbook:submitActionFg" },
+    async (event: FlatfileEvent) => {
       const {
         context: { jobId, workbookId },
         payload,
@@ -67,5 +68,6 @@ export default function flatfileEventListener(listener: Client) {
           },
         });
       }
-    });
+    }
+  );
 }

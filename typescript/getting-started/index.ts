@@ -2,9 +2,9 @@
  * See all code examples: https://github.com/FlatFilers/flatfile-docs-kitchen-sink
  */
 
-import { recordHook, FlatfileRecord } from "@flatfile/plugin-record-hook";
-import { FlatfileEvent, Client } from "@flatfile/listener";
 import api from "@flatfile/api";
+import { Client, FlatfileEvent } from "@flatfile/listener";
+import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
 import axios from "axios";
 
 export default function flatfileEventListener(listener: Client) {
@@ -37,9 +37,10 @@ export default function flatfileEventListener(listener: Client) {
   /**
    * Part 3 example
    */
-  listener
-    .filter({ job: "workbook:submitAction" })
-    .on("job:ready", async (event: FlatfileEvent) => {
+  listener.on(
+    "job:ready",
+    { job: "workbook:submitAction" },
+    async (event: FlatfileEvent) => {
       const {
         context: { jobId, workbookId },
         payload,
@@ -100,5 +101,6 @@ export default function flatfileEventListener(listener: Client) {
           },
         });
       }
-    });
+    }
+  );
 }

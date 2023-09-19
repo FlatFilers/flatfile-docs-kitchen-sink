@@ -1,8 +1,7 @@
+import api, { Flatfile } from "@flatfile/api";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import axios from "axios";
-import api from "@flatfile/api";
-import { Flatfile } from "@flatfile/api";
 import FormData from "form-data";
-import { FlatfileEvent, Client, FlatfileListener } from "@flatfile/listener";
 
 const apiUrl =
   process.env.FLATFILE_API_URL || "https://platform.flatfile.com/api";
@@ -22,7 +21,7 @@ const getFileBufferFromApi = async (fileId) => {
   return Buffer.concat(chunks);
 };
 
-export default function flatfileEventListener(listener: Client) {
+export default function flatfileEventListener(listener: FlatfileListener) {
   // Listen for file:created events
   // Update the File with the new Actions
   listener.on(
@@ -52,78 +51,70 @@ export default function flatfileEventListener(listener: Client) {
     }
   );
 
-  listener.filter(
+  listener.on(
+    "job:ready",
     { job: "file:logFileContents" },
-    (configure: FlatfileListener) => {
-      configure.on(
-        "job:ready",
-        async ({ context: { fileId, jobId } }: FlatfileEvent) => {
-          await api.jobs.ack(jobId, {
-            info: "Getting started.",
-            progress: 10,
-          });
+    async ({ context: { fileId, jobId } }: FlatfileEvent) => {
+      await api.jobs.ack(jobId, {
+        info: "Getting started.",
+        progress: 10,
+      });
 
-          const file = await api.files.get(fileId);
-          console.log({ file });
+      const file = await api.files.get(fileId);
+      console.log({ file });
 
-          await api.jobs.complete(jobId, {
-            outcome: {
-              message: "Logging file contents is complete.",
-            },
-          });
-        }
-      );
+      await api.jobs.complete(jobId, {
+        outcome: {
+          message: "Logging file contents is complete.",
+        },
+      });
     }
   );
 
-  listener.filter(
+  listener.on(
+    "job:ready",
     { job: "file:decryptAction" },
-    (configure: FlatfileListener) => {
-      configure.on(
-        "job:ready",
-        async ({
-          context: { spaceId, fileId, jobId, environmentId },
-        }: FlatfileEvent) => {
-          try {
-            await api.jobs.ack(jobId, {
-              info: "Getting started.",
-              progress: 10,
-            });
+    async ({
+      context: { spaceId, fileId, jobId, environmentId },
+    }: FlatfileEvent) => {
+      try {
+        await api.jobs.ack(jobId, {
+          info: "Getting started.",
+          progress: 10,
+        });
 
-            const fileResponse = await api.files.get(fileId);
-            const buffer = await getFileBufferFromApi(fileId);
-            const { name, ext } = fileResponse.data;
-            const newFileName = name
-              ? `${name.split(".")[0]}[Decrypted].${ext}`
-              : "DecryptedFile.csv";
+        const fileResponse = await api.files.get(fileId);
+        const buffer = await getFileBufferFromApi(fileId);
+        const { name, ext } = fileResponse.data;
+        const newFileName = name
+          ? `${name.split(".")[0]}[Decrypted].${ext}`
+          : "DecryptedFile.csv";
 
-            const formData = new FormData();
-            formData.append("file", buffer, { filename: newFileName });
-            formData.append("spaceId", spaceId);
-            formData.append("environmentId", environmentId);
+        const formData = new FormData();
+        formData.append("file", buffer, { filename: newFileName });
+        formData.append("spaceId", spaceId);
+        formData.append("environmentId", environmentId);
 
-            await axios.post(`${apiUrl}/v1/files/`, formData, {
-              headers: {
-                ...formData.getHeaders(),
-                Authorization: `Bearer ${apiKey}`,
-              },
-              transformRequest: () => formData,
-            });
+        await axios.post(`${apiUrl}/v1/files/`, formData, {
+          headers: {
+            ...formData.getHeaders(),
+            Authorization: `Bearer ${apiKey}`,
+          },
+          transformRequest: () => formData,
+        });
 
-            await api.jobs.complete(jobId, {
-              outcome: {
-                message: "Decrypting is now complete.",
-              },
-            });
-          } catch (e) {
-            await api.jobs.fail(jobId, {
-              outcome: {
-                message: "The decryption job failed.",
-              },
-            });
-          }
-        }
-      );
+        await api.jobs.complete(jobId, {
+          outcome: {
+            message: "Decrypting is now complete.",
+          },
+        });
+      } catch (e) {
+        await api.jobs.fail(jobId, {
+          outcome: {
+            message: "The decryption job failed.",
+          },
+        });
+      }
     }
   );
 }

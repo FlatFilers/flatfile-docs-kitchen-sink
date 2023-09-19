@@ -1,10 +1,11 @@
 import api from "@flatfile/api";
-import { FlatfileListener, FlatfileEvent, Client } from "@flatfile/listener";
+import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 
-export default function flatfileEventListener(listener: Client) {
-  listener
-    .filter({ job: "sheet:duplicate" })
-    .on("job:ready", async (event: FlatfileEvent) => {
+export default function flatfileEventListener(listener: FlatfileListener) {
+  listener.on(
+    "job:ready",
+    { job: "sheet:duplicate" },
+    async (event: FlatfileEvent) => {
       const {
         context: { jobId },
       } = event;
@@ -26,5 +27,6 @@ export default function flatfileEventListener(listener: Client) {
           info: "This job did not work.",
         });
       }
-    });
+    }
+  );
 }

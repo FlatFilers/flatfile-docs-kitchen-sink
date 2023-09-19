@@ -1,8 +1,10 @@
 import api from "@flatfile/api";
 
 export default function flatfileEventListener(listener) {
-  listener.filter({ job: "sheet:duplicate" }, (configure) => {
-    configure.on("job:ready", async ({ context: { jobId } }) => {
+  listener.on(
+    "job:ready",
+    { job: "sheet:duplicate" },
+    async ({ context: { jobId } }) => {
       try {
         await api.jobs.ack(jobId, {
           info: "Getting started.",
@@ -21,6 +23,6 @@ export default function flatfileEventListener(listener) {
           info: "This job did not work.",
         });
       }
-    });
-  });
+    }
+  );
 }
