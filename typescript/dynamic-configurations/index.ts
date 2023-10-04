@@ -1,90 +1,85 @@
 import api from "@flatfile/api";
 import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
+import { configureSpace } from "@flatfile/plugin-space-configure";
 
 export default function (listener: FlatfileListener) {
-  listener.on(
-    "job:ready",
-    { job: "space:configure" },
-    async (event: FlatfileEvent) => {
-      const { spaceId, environmentId, jobId } = event.context;
-      try {
-        await api.jobs.ack(jobId, {
-          info: "Gettin started.",
-          progress: 10,
-        });
-
-        await api.workbooks.create({
-          spaceId,
-          environmentId,
-          name: "All Data",
-          labels: ["pinned"],
-          sheets: [
-            {
-              name: "Contacts",
-              slug: "contacts",
-              fields: [
-                {
-                  key: "firstName",
-                  type: "string",
-                  label: "First Name",
-                },
-                {
-                  key: "lastName",
-                  type: "string",
-                  label: "Last Name",
-                },
-                {
-                  key: "email",
-                  type: "string",
-                  label: "Email",
-                },
-              ],
-              actions: [
-                {
-                  operation: "sendToPeople",
-                  mode: "background",
-                  label: "Send to selected People",
-                  description: "Send this data to those selected.",
-                  requireSelection: true,
-                  requireAllValid: false,
-                },
-              ],
-            },
-            {
-              name: "Sheet 2",
-              slug: "sheet2",
-              fields: [
-                {
-                  key: "firstName",
-                  type: "string",
-                  label: "First Name",
-                },
-                {
-                  key: "lastName",
-                  type: "string",
-                  label: "Last Name",
-                },
-                {
-                  key: "email",
-                  type: "string",
-                  label: "Email",
-                },
-              ],
-            },
-          ],
-          actions: [
-            {
-              operation: "submitActionFg",
-              mode: "foreground",
-              label: "Submit foreground",
-              description: "Submit data to webhook.site",
-              primary: true,
-            },
-          ],
-        });
-
-        const doc = await api.documents.create(spaceId, {
+  listener.use(
+    configureSpace(
+      {
+        workbooks: [
+          {
+            name: "All Data",
+            labels: ["pinned"],
+            sheets: [
+              {
+                name: "Contacts",
+                slug: "contacts",
+                fields: [
+                  {
+                    key: "firstName",
+                    type: "string",
+                    label: "First Name",
+                  },
+                  {
+                    key: "lastName",
+                    type: "string",
+                    label: "Last Name",
+                  },
+                  {
+                    key: "email",
+                    type: "string",
+                    label: "Email",
+                  },
+                ],
+                actions: [
+                  {
+                    operation: "sendToPeople",
+                    mode: "background",
+                    label: "Send to selected People",
+                    description: "Send this data to those selected.",
+                    requireSelection: true,
+                    requireAllValid: false,
+                  },
+                ],
+              },
+              {
+                name: "Sheet 2",
+                slug: "sheet2",
+                fields: [
+                  {
+                    key: "firstName",
+                    type: "string",
+                    label: "First Name",
+                  },
+                  {
+                    key: "lastName",
+                    type: "string",
+                    label: "Last Name",
+                  },
+                  {
+                    key: "email",
+                    type: "string",
+                    label: "Email",
+                  },
+                ],
+              },
+            ],
+            actions: [
+              {
+                operation: "submitActionFg",
+                mode: "foreground",
+                label: "Submit foreground",
+                description: "Submit data to webhook.site",
+                primary: true,
+              },
+            ],
+          },
+        ],
+      },
+      async (event, workbookIds, tick) => {
+        const { spaceId } = event.context;
+        await api.documents.create(spaceId, {
           title: "Getting Started",
           body:
             "# Welcome\n" +
@@ -92,24 +87,9 @@ export default function (listener: FlatfileListener) {
             "Let's begin by first getting acquainted with what you're seeing in your Space initially.\n" +
             "---\n",
         });
-
-        await api.jobs.complete(jobId, {
-          outcome: {
-            message: "Your Space was created. Let's get started.",
-            acknowledge: true,
-          },
-        });
-      } catch (error) {
-        console.error("Error:", error.stack);
-
-        await api.jobs.fail(jobId, {
-          outcome: {
-            message: "Creating a Space encountered an error. See Event Logs.",
-            acknowledge: true,
-          },
-        });
+        await tick(80, "Document created");
       }
-    }
+    )
   );
 
   listener.on(
