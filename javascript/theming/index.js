@@ -47,15 +47,8 @@ export default function flatfileEventListener(listener) {
                     "Duplicate this Sheet and lock down the original.",
                   requireSelection: false,
                   requireAllValid: true,
-                  constraints: [
-                    { type: "hasAllValid" },
-                    { type: "hasSelection" },
-                  ],
                 },
               ],
-              settings: {
-                trackChanges: true,
-              },
             },
           ],
           actions: [

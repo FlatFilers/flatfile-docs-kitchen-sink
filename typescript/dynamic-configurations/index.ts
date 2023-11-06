@@ -72,8 +72,15 @@ export default function (listener: FlatfileListener) {
                 label: "Submit foreground",
                 description: "Submit data to webhook.site",
                 primary: true,
+                constraints: [
+                  { type: "hasAllValid" },
+                  { type: "hasSelection" },
+                ],
               },
             ],
+            settings: {
+              trackChanges: true,
+            },
           },
         ],
       },
