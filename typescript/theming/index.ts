@@ -40,6 +40,7 @@ export default function flatfileEventListener(listener: FlatfileListener) {
                   label: "Email",
                 },
               ],
+
               actions: [
                 {
                   operation: "duplicate",
@@ -60,8 +61,13 @@ export default function flatfileEventListener(listener: FlatfileListener) {
               label: "Submit foreground",
               description: "Submit data to webhook.site",
               primary: true,
+              constraints: [{ type: "hasAllValid" }, { type: "hasSelection" }],
             },
           ],
+
+          settings: {
+            trackChanges: true,
+          },
         });
 
         await api.jobs.complete(jobId, {
