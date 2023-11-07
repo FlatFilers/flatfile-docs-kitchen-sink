@@ -43,7 +43,7 @@ export default function flatfileEventListener(listener: FlatfileListener) {
               message: "This job is now complete.",
             },
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error:", error.stack);
 
           await api.jobs.fail(jobId, {
