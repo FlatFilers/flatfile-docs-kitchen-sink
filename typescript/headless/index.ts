@@ -3,7 +3,7 @@ import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import { automap } from "@flatfile/plugin-automap";
 import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
 import { ExcelExtractor } from "@flatfile/plugin-xlsx-extractor";
-import nodemailer from "nodemailer";
+import * as nodemailer from "nodemailer";
 import { promisify } from "util";
 
 export default function flatfileEventListener(listener: FlatfileListener) {
@@ -94,23 +94,20 @@ export default function flatfileEventListener(listener: FlatfileListener) {
 
   // 3. Transform and Validate
   listener.use(
-    recordHook(
-      "inventory",
-      async (record: FlatfileRecord, event: FlatfileEvent) => {
-        const author = record.get("author");
-        function validateNameFormat(name) {
-          const pattern: RegExp = /^\s*[\p{L}'-]+\s*,\s*[\p{L}'-]+\s*$/u;
-          return pattern.test(name);
-        }
-
-        if (!validateNameFormat(author)) {
-          const nameSplit = (author as string).split(" ");
-          record.set("author", `${nameSplit[1]}, ${nameSplit[0]}`);
-          record.addComment("author", "Author name was updated for vendor");
-          return record;
-        }
+    recordHook("inventory", async (record: FlatfileRecord) => {
+      const author = record.get("author") as string;
+      function validateNameFormat(name: string) {
+        const pattern: RegExp = /^\s*[\p{L}'-]+\s*,\s*[\p{L}'-]+\s*$/u;
+        return pattern.test(name);
       }
-    )
+
+      if (!validateNameFormat(author)) {
+        const nameSplit = author.split(" ");
+        record.set("author", `${nameSplit[1]}, ${nameSplit[0]}`);
+        record.addComment("author", "Author name was updated for vendor");
+        return record;
+      }
+    })
   );
 
   // 4. Automate Egress
@@ -123,8 +120,10 @@ export default function flatfileEventListener(listener: FlatfileListener) {
       const password = await event.secrets("password");
 
       const { data } = await api.workbooks.get(event.context.workbookId);
-      const inventorySheet = data.sheets[0].id;
-      const orderSheet = data.sheets[1].id;
+      const { sheets } = data;
+      if (!sheets) throw new Error("Workbook does not have any sheets");
+      const inventorySheet = sheets[0].id;
+      const orderSheet = sheets[1].id;
 
       // Update a purchase order sheet
       const currentInventory = await api.records.get(inventorySheet);
