@@ -125,19 +125,28 @@ export default function flatfileEventListener(listener: FlatfileListener) {
     // Update a purchase order sheet
     const currentInventory = await api.records.get(inventorySheet);
     const purchaseInventory = currentInventory.data.records.map((item) => {
-      const stockValue = item.values.stock.value;
-      if (!stockValue || typeof stockValue !== "number")
-        throw new Error(
-          "Stock value is not a number, check that it is defiend in the sheet and that it is a number"
-        );
+      try {
+        const stockValue = item.values.stock.value;
+        if (!stockValue || typeof stockValue !== "number")
+          throw new Error(
+            "Stock value is not a number, check that it is defiend in the sheet and that it is a number"
+          );
 
-      const stockOrder = Math.max(3 - stockValue, 0);
-      item.values.purchase = {
-        value: stockOrder,
-        valid: true,
-      };
-      const { stock, ...fields } = item.values;
-      return fields;
+        const stockOrder = Math.max(3 - stockValue, 0);
+        item.values.purchase = {
+          value: stockOrder,
+          valid: true,
+        };
+      } catch (err: any) {
+        console.error(err);
+        item.values.purchase = {
+          value: undefined,
+          valid: false,
+        };
+      } finally {
+        const { stock, ...fields } = item.values;
+        return fields;
+      }
     });
     const purchaseOrder = purchaseInventory.filter(
       (item) =>
