@@ -1,14 +1,14 @@
 import api from "@flatfile/api";
-import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
+import { FlatfileListener } from "@flatfile/listener";
 import { automap } from "@flatfile/plugin-automap";
-import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
+import { recordHook } from "@flatfile/plugin-record-hook";
 import { ExcelExtractor } from "@flatfile/plugin-xlsx-extractor";
 import * as nodemailer from "nodemailer";
 import { promisify } from "util";
 
 export default function flatfileEventListener(listener: FlatfileListener) {
   // 1.Create a Workbook
-  listener.on("space:created", async (event: FlatfileEvent) => {
+  listener.on("space:created", async (event) => {
     const { spaceId, environmentId } = event.context;
 
     // Date included in workbook name
@@ -94,10 +94,10 @@ export default function flatfileEventListener(listener: FlatfileListener) {
 
   // 3. Transform and Validate
   listener.use(
-    recordHook("inventory", async (record: FlatfileRecord) => {
+    recordHook("inventory", async (record) => {
       const author = record.get("author") as string;
       function validateNameFormat(name: string) {
-        const pattern: RegExp = /^\s*[\p{L}'-]+\s*,\s*[\p{L}'-]+\s*$/u;
+        const pattern = /^\s*[\p{L}'-]+\s*,\s*[\p{L}'-]+\s*$/u;
         return pattern.test(name);
       }
 
@@ -111,63 +111,65 @@ export default function flatfileEventListener(listener: FlatfileListener) {
   );
 
   // 4. Automate Egress
-  listener.on(
-    "job:completed",
-    { job: "workbook:map" },
-    async (event: FlatfileEvent) => {
-      // Fetch the email and password from the secrets store
-      const email = await event.secrets("email");
-      const password = await event.secrets("password");
+  listener.on("job:completed", { job: "workbook:map" }, async (event) => {
+    // Fetch the email and password from the secrets store
+    const email = await event.secrets("email");
+    const password = await event.secrets("password");
 
-      const { data } = await api.workbooks.get(event.context.workbookId);
-      const { sheets } = data;
-      if (!sheets) throw new Error("Workbook does not have any sheets");
-      const inventorySheet = sheets[0].id;
-      const orderSheet = sheets[1].id;
+    const { data } = await api.workbooks.get(event.context.workbookId);
+    const { sheets } = data;
+    if (!sheets) throw new Error("Workbook does not have any sheets");
+    const inventorySheet = sheets[0].id;
+    const orderSheet = sheets[1].id;
 
-      // Update a purchase order sheet
-      const currentInventory = await api.records.get(inventorySheet);
-      const purchaseInventory = currentInventory.data.records.map((item) => {
-        const stockValue = item.values.stock.value;
-        const stockOrder = Math.max(3 - (stockValue as number), 0);
-        item.values.purchase = {
-          value: stockOrder,
-          valid: true,
-        };
-        const { stock, ...fields } = item.values;
-        return fields;
-      });
-      const purchaseOrder = purchaseInventory.filter(
-        (item) => (item.purchase.value as number) > 0
-      );
+    // Update a purchase order sheet
+    const currentInventory = await api.records.get(inventorySheet);
+    const purchaseInventory = currentInventory.data.records.map((item) => {
+      const stockValue = item.values.stock.value;
+      if (!stockValue || typeof stockValue !== "number")
+        throw new Error(
+          "Stock value is not a number, check that it is defiend in the sheet and that it is a number"
+        );
 
-      await api.records.insert(orderSheet, purchaseOrder);
-
-      // Get the purchase order as a CSV
-      const csv = await api.sheets.getRecordsAsCsv(orderSheet);
-
-      // Send the purchase order to the warehouse
-      const transporter = nodemailer.createTransport({
-        service: "Gmail",
-        auth: {
-          user: email,
-          pass: password,
-        },
-      });
-      const mailOptions = {
-        from: email,
-        to: "warehouse@books.com", // Configure for desired recipient
-        subject: "Purchase Order",
-        text: "Attached",
-        attachments: [
-          {
-            filename: "orders.csv",
-            content: csv,
-          },
-        ],
+      const stockOrder = Math.max(3 - stockValue, 0);
+      item.values.purchase = {
+        value: stockOrder,
+        valid: true,
       };
-      const sendMail = promisify(transporter.sendMail.bind(transporter));
-      await sendMail(mailOptions);
-    }
-  );
+      const { stock, ...fields } = item.values;
+      return fields;
+    });
+    const purchaseOrder = purchaseInventory.filter(
+      (item) =>
+        typeof item.purchase.value === "number" && item.purchase.value > 0
+    );
+
+    await api.records.insert(orderSheet, purchaseOrder);
+
+    // Get the purchase order as a CSV
+    const csv = await api.sheets.getRecordsAsCsv(orderSheet);
+
+    // Send the purchase order to the warehouse
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: email,
+        pass: password,
+      },
+    });
+    const mailOptions = {
+      from: email,
+      to: "warehouse@books.com", // Configure for desired recipient
+      subject: "Purchase Order",
+      text: "Attached",
+      attachments: [
+        {
+          filename: "orders.csv",
+          content: csv,
+        },
+      ],
+    };
+    const sendMail = promisify(transporter.sendMail.bind(transporter));
+    await sendMail(mailOptions);
+  });
 }
