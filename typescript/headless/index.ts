@@ -6,10 +6,15 @@ import { ExcelExtractor } from "@flatfile/plugin-xlsx-extractor";
 import * as nodemailer from "nodemailer";
 import { promisify } from "util";
 
+import fs from "fs";
+import path from "path";
+
 export default function flatfileEventListener(listener: FlatfileListener) {
   // 1.Create a Workbook
-  listener.on("space:created", async (event) => {
-    const { spaceId, environmentId } = event.context;
+
+  let workbook: any;
+  listener.on("job:ready", { job: "space:configure" }, async (event) => {
+    const { spaceId, environmentId, jobId } = event.context;
 
     // Date included in workbook name
     const date = new Intl.DateTimeFormat("en-US", {
@@ -18,77 +23,154 @@ export default function flatfileEventListener(listener: FlatfileListener) {
       day: "2-digit",
     }).format(new Date());
 
-    await api.workbooks.create({
-      spaceId,
-      environmentId,
-      name: `${date} Inventory`,
-      sheets: [
+    try {
+      workbook = await api.workbooks.create({
+        spaceId,
+        environmentId,
+        name: `${date} Inventory`,
+        sheets: [
+          {
+            name: `Inventory`,
+            slug: "inventory",
+            fields: [
+              {
+                key: "title",
+                type: "string",
+                label: "Title",
+              },
+              {
+                key: "author",
+                type: "string",
+                label: "Author",
+              },
+              {
+                key: "isbn",
+                type: "string",
+                label: "ISBN",
+              },
+              {
+                key: "stock",
+                type: "number",
+                label: "Stock",
+              },
+            ],
+            actions: [],
+          },
+          {
+            name: `Purchase Order`,
+            slug: "purchase-order",
+            fields: [
+              {
+                key: "title",
+                type: "string",
+                label: "Title",
+              },
+              {
+                key: "author",
+                type: "string",
+                label: "Author",
+              },
+              {
+                key: "isbn",
+                type: "string",
+                label: "ISBN",
+              },
+              {
+                key: "purchase",
+                type: "number",
+                label: "Purchase",
+              },
+            ],
+            actions: [],
+          },
+        ],
+      });
+      api.secrets.upsert({
+        name: "email",
+        value: "stringEmail",
+        environmentId,
+        spaceId,
+      });
+      api.secrets.upsert({
+        name: "password",
+        // Use whatever method fits your use case to store your password securely
+        value: "stringPass",
+        environmentId,
+        spaceId,
+      });
+
+      await api.files.upload(
+        fs.createReadStream(path.resolve(__dirname, "./inventory.xlsx")),
         {
-          name: `Inventory`,
-          slug: "inventory",
-          fields: [
-            {
-              key: "title",
-              type: "string",
-              label: "Title",
-            },
-            {
-              key: "author",
-              type: "string",
-              label: "Author",
-            },
-            {
-              key: "isbn",
-              type: "string",
-              label: "ISBN",
-            },
-            {
-              key: "stock",
-              type: "number",
-              label: "Stock",
-            },
-          ],
-          actions: [],
+          spaceId,
+          environmentId,
+        }
+      );
+
+      await api.jobs.complete(jobId, {
+        outcome: {
+          message: "Your Space was created.",
         },
-        {
-          name: `Purchase Order`,
-          slug: "purchase-order",
-          fields: [
-            {
-              key: "title",
-              type: "string",
-              label: "Title",
-            },
-            {
-              key: "author",
-              type: "string",
-              label: "Author",
-            },
-            {
-              key: "isbn",
-              type: "string",
-              label: "ISBN",
-            },
-            {
-              key: "purchase",
-              type: "number",
-              label: "Purchase",
-            },
-          ],
-          actions: [],
+      });
+    } catch (err) {
+      console.error(err);
+
+      await api.jobs.fail(jobId, {
+        outcome: {
+          message: "Creating a Space encountered an error. See Event Logs.",
         },
-      ],
-    });
+      });
+    }
   });
 
   // 2. Automate Extraction and Mapping
   listener.use(ExcelExtractor({ rawNumbers: true }));
+
+  listener.on(
+    "job:completed",
+    { operation: "extract-plugin-excel" },
+    async (event) => {
+      try {
+        const { fileId } = event.context;
+        const file = await api.files.get(fileId);
+        const fileWorkbookId = file.data.workbookId;
+        if (!fileWorkbookId) throw new Error("Workbook does not have an id");
+        const fileWorkbook = await api.workbooks.get(fileWorkbookId);
+
+        const workbookId = workbook.data.id;
+        const sheets = (await api.workbooks.get(workbookId)).data.sheets;
+        if (!sheets) throw new Error("Workbook does not have any sheets");
+        const sheetId = sheets[0].id;
+
+        const fileWorkbookSheets = fileWorkbook.data.sheets;
+        if (!fileWorkbookId || !fileWorkbookSheets)
+          throw new Error("Workbook does not have an id");
+        const sourceSheetId = fileWorkbookSheets[0].id;
+        await api.jobs.create({
+          type: "workbook",
+          operation: "map",
+          source: fileWorkbookId,
+          destination: workbookId,
+          status: "planning",
+          config: {
+            destinationSheetId: sheetId,
+            sourceSheetId: sourceSheetId,
+          },
+          trigger: "immediate",
+        });
+      } catch (err) {
+        console.dir(err, { depth: null });
+      }
+    }
+  );
+
   listener.use(
     automap({
       accuracy: "confident",
       defaultTargetSheet: "Inventory",
       matchFilename: /^.*inventory\.xlsx$/,
-      onFailure: console.error,
+      debug: true,
+      onFailure: (err) => console.error(err),
     })
   );
 
@@ -126,11 +208,19 @@ export default function flatfileEventListener(listener: FlatfileListener) {
     const currentInventory = await api.records.get(inventorySheet);
     const purchaseInventory = currentInventory.data.records.map((item) => {
       try {
-        const stockValue = item.values.stock.value;
-        if (!stockValue || typeof stockValue !== "number")
+        if (!item.values.stock.value)
+          throw new Error("Stock value is not defined");
+        const stockValue =
+          typeof item.values.stock.value === "string"
+            ? parseInt(item.values.stock.value)
+            : item.values.stock.value;
+        console.dir(typeof stockValue);
+        if (!stockValue || typeof stockValue !== "number") {
+          console.dir(stockValue);
           throw new Error(
             "Stock value is not a number, check that it is defiend in the sheet and that it is a number"
           );
+        }
 
         const stockOrder = Math.max(3 - stockValue, 0);
         item.values.purchase = {
