@@ -1,4 +1,4 @@
-import api from "@flatfile/api";
+import api, { Flatfile } from "@flatfile/api";
 import { FlatfileListener } from "@flatfile/listener";
 import { automap } from "@flatfile/plugin-automap";
 import { recordHook } from "@flatfile/plugin-record-hook";
@@ -12,7 +12,7 @@ import path from "path";
 export default function flatfileEventListener(listener: FlatfileListener) {
   // 1.Create a Workbook
 
-  let workbook: any;
+  let workbook: Flatfile.WorkbookResponse;
   listener.on("job:ready", { job: "space:configure" }, async (event) => {
     const { spaceId, environmentId, jobId } = event.context;
 
