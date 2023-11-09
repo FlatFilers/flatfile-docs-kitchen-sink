@@ -21,6 +21,7 @@ export default function flatfileEventListener(listener) {
       spaceId,
       environmentId,
       name: `${date} Inventory`,
+      settings: { trackChanges: true },
       sheets: [
         {
           name: `Inventory`,
@@ -110,7 +111,7 @@ export default function flatfileEventListener(listener) {
   );
 
   // 4. Automate Egress
-  listener.on("job:completed", { job: "workbook:map" }, async (event) => {
+  listener.on("commit:completed", async (event) => {
     // Fetch the email and password from the secrets store
     const email = await event.secrets("email");
     const password = await event.secrets("password");
