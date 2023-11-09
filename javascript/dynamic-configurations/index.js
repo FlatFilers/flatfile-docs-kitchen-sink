@@ -70,8 +70,15 @@ export default function (listener) {
                 label: "Submit foreground",
                 description: "Submit data to webhook.site",
                 primary: true,
+                constraints: [
+                  { type: "hasAllValid" },
+                  { type: "hasSelection" },
+                ],
               },
             ],
+            settings: {
+              trackChanges: true,
+            },
           },
         ],
       },
