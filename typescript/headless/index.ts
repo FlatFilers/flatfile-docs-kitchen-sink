@@ -3,7 +3,7 @@ import { FlatfileListener } from "@flatfile/listener";
 import { automap } from "@flatfile/plugin-automap";
 import { recordHook } from "@flatfile/plugin-record-hook";
 import { ExcelExtractor } from "@flatfile/plugin-xlsx-extractor";
-import * as nodemailer from "nodemailer";
+import nodemailer from "nodemailer";
 import { promisify } from "util";
 
 import fs from "fs";
