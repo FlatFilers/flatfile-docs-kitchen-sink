@@ -23,7 +23,7 @@
     "@flatfile/plugin-xml-extractor": "^0.5.0",
     "@flatfile/plugin-zip-extractor": "^0.3.6",
     "@flatfile/util-response-rejection": "^0.1.0",
-    "axios": "^1.5.0",
+    "axios": "^1.6.0",
     "flatfile": "^3.5.9",
     "form-data": "^4.0.0",
     "nodemailer": "^6.9.4"
