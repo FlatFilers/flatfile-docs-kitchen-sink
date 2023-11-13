@@ -214,7 +214,6 @@ export default function flatfileEventListener(listener: FlatfileListener) {
           typeof item.values.stock.value === "string"
             ? parseInt(item.values.stock.value)
             : item.values.stock.value;
-        console.dir(typeof stockValue);
         if (!stockValue || typeof stockValue !== "number") {
           console.dir(stockValue);
           throw new Error(
