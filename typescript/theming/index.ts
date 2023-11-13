@@ -40,6 +40,7 @@ export default function flatfileEventListener(listener: FlatfileListener) {
                   label: "Email",
                 },
               ],
+
               actions: [
                 {
                   operation: "duplicate",
