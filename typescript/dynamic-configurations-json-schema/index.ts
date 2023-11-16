@@ -52,13 +52,13 @@ export default function (listener: FlatfileListener) {
       [
         {
           sourceUrl:
-            "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/feat/json-schema-examples/typescript/dynamic-configurations-json-schema/example-schemas/person.json",
+            "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/main/typescript/dynamic-configurations-json-schema/example-schemas/person.json",
           name: "Custom Person Sheet Name",
           actions: sheetActions,
         },
         {
           sourceUrl:
-            "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/feat/json-schema-examples/typescript/dynamic-configurations-json-schema/example-schemas/product.json",
+            "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/main/typescript/dynamic-configurations-json-schema/example-schemas/product.json",
         },
       ] as ModelToSheetConfig[],
       {

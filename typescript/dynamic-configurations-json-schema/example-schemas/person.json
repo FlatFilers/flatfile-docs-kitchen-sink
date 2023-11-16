@@ -1,5 +1,5 @@
 {
-  "$id": "https://github.com/FlatFilers/flatfile-docs-kitchen-sink/blob/feat/json-schema-examples/typescript/dynamic-configurations-json-schema/example-schemas/person.json",
+  "$id": "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/main/typescript/dynamic-configurations-json-schema/example-schemas/person.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Person",
   "type": "object",
