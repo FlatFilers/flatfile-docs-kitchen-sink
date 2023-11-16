@@ -1,3 +1,4 @@
+import api from "@flatfile/api";
 import { configureSpaceWithJsonSchema } from "@flatfile/plugin-convert-json-schema";
 
 export default function (listener) {
@@ -41,11 +42,15 @@ export default function (listener) {
     configureSpaceWithJsonSchema(
       [
         {
-          sourceUrl: "http://example.com/schema/person",
-          actions: sheetActions,
+          sourceUrl:
+            "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/feat/json-schema-examples/typescript/dynamic-configurations-json-schema/example-schemas/person.json",
           name: "Custom Person Sheet Name",
+          actions: sheetActions,
         },
-        { sourceUrl: "http://example.com/schema/product" },
+        {
+          sourceUrl:
+            "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/feat/json-schema-examples/typescript/dynamic-configurations-json-schema/example-schemas/product.json",
+        },
       ],
       {
         workbookConfig: {

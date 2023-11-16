@@ -1,4 +1,4 @@
-import { Flatfile } from "@flatfile/api";
+import api, { Flatfile } from "@flatfile/api";
 import type { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import {
   ModelToSheetConfig,
@@ -51,11 +51,15 @@ export default function (listener: FlatfileListener) {
     configureSpaceWithJsonSchema(
       [
         {
-          sourceUrl: "http://example.com/schema/person",
+          sourceUrl:
+            "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/feat/json-schema-examples/typescript/dynamic-configurations-json-schema/example-schemas/person.json",
           name: "Custom Person Sheet Name",
           actions: sheetActions,
         },
-        { sourceUrl: "http://example.com/schema/product" },
+        {
+          sourceUrl:
+            "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/feat/json-schema-examples/typescript/dynamic-configurations-json-schema/example-schemas/product.json",
+        },
       ] as ModelToSheetConfig[],
       {
         workbookConfig: {

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "http://localhost:1234/product.schema.json",
+  "$id": "https://github.com/FlatFilers/flatfile-docs-kitchen-sink/blob/feat/json-schema-examples/typescript/dynamic-configurations-json-schema/example-schemas/product.json",
   "title": "Product",
   "description": "A product from Acme's catalog",
   "type": "object",
