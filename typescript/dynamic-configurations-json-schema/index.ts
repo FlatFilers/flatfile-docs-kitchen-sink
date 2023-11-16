@@ -51,11 +51,8 @@ export default function (listener: FlatfileListener) {
     configureSpaceWithJsonSchema(
       [
         {
-          sourceUrl: "http://example.com/schema/customer",
-          name: "Custom Customer Sheet Name",
-        },
-        {
           sourceUrl: "http://example.com/schema/person",
+          name: "Custom Person Sheet Name",
           actions: sheetActions,
         },
         { sourceUrl: "http://example.com/schema/product" },

@@ -41,12 +41,9 @@ export default function (listener) {
     configureSpaceWithJsonSchema(
       [
         {
-          sourceUrl: "http://example.com/schema/customer",
-          name: "Custom Customer Sheet Name",
-        },
-        {
           sourceUrl: "http://example.com/schema/person",
           actions: sheetActions,
+          name: "Custom Person Sheet Name",
         },
         { sourceUrl: "http://example.com/schema/product" },
       ],
