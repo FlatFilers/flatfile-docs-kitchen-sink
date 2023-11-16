@@ -3,8 +3,8 @@ import type { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import {
   ModelToSheetConfig,
   PartialWorkbookConfig,
-  configureSpaceWithYamlSchema,
-} from "@flatfile/plugin-convert-yaml-schema";
+} from "@flatfile/plugin-convert-json-schema";
+import { configureSpaceWithYamlSchema } from "@flatfile/plugin-convert-yaml-schema";
 
 export default function (listener: FlatfileListener) {
   const workbookActions: Flatfile.Action[] = [
