@@ -1,5 +1,5 @@
 import { FlatfileListener } from "@flatfile/listener";
-import { configureSpaceWithJsonSchema } from "@flatfile/plugin-convert-yaml-schema";
+import { configureSpaceWithYamlSchema } from "@flatfile/plugin-convert-yaml-schema";
 
 export default function (listener: FlatfileListener) {
   listener.use(
