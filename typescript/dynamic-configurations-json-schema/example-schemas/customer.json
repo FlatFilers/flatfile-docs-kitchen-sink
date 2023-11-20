@@ -1,0 +1,20 @@
+{
+  "$id": "https://raw.githubusercontent.com/FlatFilers/flatfile-docs-kitchen-sink/main/typescript/dynamic-configurations-json-schema/example-schemas/customer.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Customer",
+  "type": "object",
+  "properties": {
+    "fullName": {
+      "type": "string",
+      "description": "The person's full name."
+    },
+    "email": {
+      "type": "string",
+      "description": "The person's email."
+    },
+    "phone": {
+      "type": "integer",
+      "description": "The person's phone number."
+    }
+  }
+}
