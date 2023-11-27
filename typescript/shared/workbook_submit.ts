@@ -1,6 +1,9 @@
 import api from "@flatfile/api";
 import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
-import { responseRejectionHandler } from "@flatfile/util-response-rejection";
+import {
+  RejectionResponse,
+  responseRejectionHandler,
+} from "@flatfile/util-response-rejection";
 import axios from "axios";
 
 export default function flatfileEventListener(listener: FlatfileListener) {
@@ -52,21 +55,9 @@ export default function flatfileEventListener(listener: FlatfileListener) {
         );
 
         if (response.status === 200) {
-          const rejections = response.data.rejections;
+          const rejections: RejectionResponse = response.data.rejections;
           if (rejections) {
-            const totalRejectedRecords = await responseRejectionHandler(
-              rejections
-            );
-            return await api.jobs.complete(jobId, {
-              outcome: {
-                next: {
-                  type: "id",
-                  id: rejections.id,
-                  label: "See rejections...",
-                },
-                message: `Data was submission was partially successful. ${totalRejectedRecords} record(s) were rejected.`,
-              },
-            });
+            return await responseRejectionHandler(rejections);
           }
           return await api.jobs.complete(jobId, {
             outcome: {
