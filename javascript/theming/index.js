@@ -86,7 +86,7 @@ export default function flatfileEventListener(listener) {
     async ({ context: { spaceId, environmentId } }) => {
       //const updateSpace = await flatfile.spaces.update(spaceId, {});
 
-      const updateSpace = await api.spaces.update(spaceId, {
+      await api.spaces.update(spaceId, {
         environmentId,
         metadata: {
           theme: {

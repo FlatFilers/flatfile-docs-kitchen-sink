@@ -70,7 +70,7 @@ export default function flatfileEventListener(listener: FlatfileListener) {
             message: "Your Space was created.",
           },
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error:", error.stack);
 
         await api.jobs.fail(jobId, {
@@ -86,7 +86,7 @@ export default function flatfileEventListener(listener: FlatfileListener) {
   //you can also do this during configuration
   listener.on("space:created", async (event: FlatfileEvent) => {
     const { spaceId, environmentId } = event.context;
-    const updateSpace = await api.spaces.update(spaceId, {
+    await api.spaces.update(spaceId, {
       environmentId,
       metadata: {
         theme: {
