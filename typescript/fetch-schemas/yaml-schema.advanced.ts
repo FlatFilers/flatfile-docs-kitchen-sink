@@ -1,9 +1,9 @@
 import api, { Flatfile } from "@flatfile/api";
 import type { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import {
-  ModelToSheetConfig,
   PartialWorkbookConfig,
 } from "@flatfile/plugin-convert-json-schema";
+import type { ModelToSheetConfig } from "@flatfile/util-fetch-schema";
 import { configureSpaceWithYamlSchema } from "@flatfile/plugin-convert-yaml-schema";
 
 export default function (listener: FlatfileListener) {
