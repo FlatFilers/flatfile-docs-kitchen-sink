@@ -1,89 +1,91 @@
-import api from "@flatfile/api";
+import api, { Flatfile } from "@flatfile/api";
 import { FlatfileEvent, FlatfileListener } from "@flatfile/listener";
 import { FlatfileRecord, recordHook } from "@flatfile/plugin-record-hook";
-import { configureSpace } from "@flatfile/plugin-space-configure";
+import { SetupFactory, configureSpace } from "@flatfile/plugin-space-configure";
 
 export default function (listener: FlatfileListener) {
-  listener.use(
-    configureSpace(
+  const workbooks: SetupFactory = {
+    workbooks: [
       {
-        workbooks: [
+        name: "All Data",
+        labels: ["pinned"],
+        sheets: [
           {
-            name: "All Data",
-            labels: ["pinned"],
-            sheets: [
+            name: "Contacts",
+            slug: "contacts",
+            fields: [
               {
-                name: "Contacts",
-                slug: "contacts",
-                fields: [
-                  {
-                    key: "firstName",
-                    type: "string",
-                    label: "First Name",
-                  },
-                  {
-                    key: "lastName",
-                    type: "string",
-                    label: "Last Name",
-                  },
-                  {
-                    key: "email",
-                    type: "string",
-                    label: "Email",
-                  },
-                ],
-                actions: [
-                  {
-                    operation: "sendToPeople",
-                    mode: "background",
-                    label: "Send to selected People",
-                    description: "Send this data to those selected.",
-                    requireSelection: true,
-                    requireAllValid: false,
-                  },
-                ],
+                key: "firstName",
+                type: "string",
+                label: "First Name",
               },
               {
-                name: "Sheet 2",
-                slug: "sheet2",
-                fields: [
-                  {
-                    key: "firstName",
-                    type: "string",
-                    label: "First Name",
-                  },
-                  {
-                    key: "lastName",
-                    type: "string",
-                    label: "Last Name",
-                  },
-                  {
-                    key: "email",
-                    type: "string",
-                    label: "Email",
-                  },
-                ],
+                key: "lastName",
+                type: "string",
+                label: "Last Name",
+              },
+              {
+                key: "email",
+                type: "string",
+                label: "Email",
               },
             ],
             actions: [
               {
-                operation: "submitActionFg",
-                mode: "foreground",
-                label: "Submit foreground",
-                description: "Submit data to webhook.site",
-                primary: true,
-                constraints: [
-                  { type: "hasAllValid" },
-                  { type: "hasSelection" },
-                ],
+                operation: "sendToPeople",
+                mode: "background",
+                label: "Send to selected People",
+                description: "Send this data to those selected.",
+                requireSelection: true,
+                requireAllValid: false,
               },
             ],
-            settings: {
-              trackChanges: true,
-            },
+          },
+          {
+            name: "Sheet 2",
+            slug: "sheet2",
+            fields: [
+              {
+                key: "firstName",
+                type: "string",
+                label: "First Name",
+              },
+              {
+                key: "lastName",
+                type: "string",
+                label: "Last Name",
+              },
+              {
+                key: "email",
+                type: "string",
+                label: "Email",
+              },
+            ],
           },
         ],
+        actions: [
+          {
+            operation: "submitActionFg",
+            mode: "foreground",
+            label: "Submit foreground",
+            description: "Submit data to webhook.site",
+            primary: true,
+            constraints: [
+              { type: "hasAllValid" },
+              { type: "hasSelection" },
+            ],
+          },
+        ],
+        settings: {
+          trackChanges: true,
+        },
       },
+    ],
+  }
+  
+  listener.use(
+    configureSpace(
+      workbooks,
       async (event, workbookIds, tick) => {
         const { spaceId } = event.context;
         await api.documents.create(spaceId, {
@@ -95,7 +97,7 @@ export default function (listener: FlatfileListener) {
             "---\n",
         });
         await tick(80, "Document created");
-      }
+      },
     )
   );
 

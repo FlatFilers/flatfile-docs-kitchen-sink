@@ -76,7 +76,7 @@ export default function flatfileEventListener(listener: FlatfileListener) {
 
   //add file support
   listener.use(JSONExtractor());
-  listener.use(ExcelExtractor());
+  listener.use(ExcelExtractor({}));
   listener.use(XMLExtractor());
   listener.use(DelimiterExtractor("txt", { delimiter: "~" }));
   listener.use(ZipExtractor());
