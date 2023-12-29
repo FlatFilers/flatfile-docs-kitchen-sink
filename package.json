@@ -16,7 +16,7 @@
     "@flatfile/plugin-automap": "^0.0.3",
     "@flatfile/plugin-connect-via-merge": "^0.0.2",
     "@flatfile/plugin-convert-json-schema": "^0.1.0",
-    "@flatfile/plugin-convert-yaml-schema": "^0.0.2",
+    "@flatfile/plugin-convert-yaml-schema": "^0.0.4",
     "@flatfile/plugin-delimiter-extractor": "^0.6.0",
     "@flatfile/plugin-json-extractor": "0.6.0",
     "@flatfile/plugin-record-hook": "^1.1.1",
