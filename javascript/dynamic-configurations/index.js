@@ -1,4 +1,5 @@
 import api from "@flatfile/api";
+import { recordHook } from "@flatfile/plugin-record-hook";
 import { configureSpace } from "@flatfile/plugin-space-configure";
 
 export default function (listener) {
@@ -81,18 +82,41 @@ export default function (listener) {
             },
           },
         ],
+        space: {
+          metadata: {
+            theme: {
+              root: {
+                primaryColor: "black",
+              },
+              sidebar: {
+                logo: "https://images.ctfassets.net/hjneo4qi4goj/33l3kWmPd9vgl1WH3m9Jsq/13861635730a1b8af383a8be8932f1d6/flatfile-black.svg",
+              },
+            },
+          },
+        },
+        documents: [
+          {
+            title: "Welcome",
+            body: `<div>
+          <h1 style="margin-bottom: 36px;">Welcome!</h1>
+          <h2 style="margin-top: 0px; margin-bottom: 12px;">To get started, follow these steps:</h2>
+          <h2 style="margin-bottom: 0px;">1. Step One</h2>
+          <p style="margin-top: 0px; margin-bottom: 8px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+          <h2 style="margin-bottom: 0px;">2. Step Two</h2>
+          <p style="margin-top: 0px; margin-bottom: 8px;">Consectetur libero id faucibus nisl tincidunt eget. Pellentesque elit eget gravida cum sociis natoque penatibus et. Tempor orci eu lobortis elementum nibh.</p>
+          </div>`,
+          },
+        ],
       },
       async (event, workbookIds, tick) => {
         const { spaceId } = event.context;
-        await api.documents.create(spaceId, {
-          title: "Getting Started",
-          body:
-            "# Welcome\n" +
-            "### Say hello to your first customer Space in the new Flatfile!\n" +
-            "Let's begin by first getting acquainted with what you're seeing in your Space initially.\n" +
-            "---\n",
-        });
-        await tick(80, "Document created");
+        // Callback is invoked once the Space and Workbooks are fully configured.
+        // Job progress will be at 50% when the callback is invoked.
+        tick(51, "Running callback!");
+
+        // Do something...
+
+        await tick(99, "Callback complete!");
       }
     )
   );
@@ -100,7 +124,9 @@ export default function (listener) {
   listener.on(
     "job:ready",
     { job: "workbook:submitActionFg" },
-    async ({ context: { jobId } }) => {
+    async (event) => {
+      const { workbookId, jobId } = event.context;
+
       try {
         await api.jobs.ack(jobId, {
           info: "Gettin started.",
@@ -110,9 +136,17 @@ export default function (listener) {
         //make changes after cells in a Sheet have been updated
         console.log("make changes here when an action is clicked");
 
+        //todo: get the workbook and sheets here
+        const sheet2 = "us_sh_8XFdltuj";
+
         await api.jobs.complete(jobId, {
           outcome: {
-            message: "This job is now complete.",
+            message: "Submit is now complete.",
+            next: {
+              type: "id",
+              id: sheet2,
+              label: "Next: Review Sheet 2",
+            },
           },
         });
       } catch (error) {
@@ -131,4 +165,22 @@ export default function (listener) {
     //make changes after cells in a Sheet have been updated
     console.log("made it here");
   });
+
+  listener.use(
+    recordHook("contacts", (record) => {
+      const value = record.get("firstName");
+      if (typeof value === "string") {
+        record.set("firstName", value.toLowerCase());
+      }
+
+      const email = record.get("email");
+      const validEmailAddress = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!validEmailAddress.test(email)) {
+        console.log("Invalid email address");
+        record.addError("email", "Invalid email address");
+      }
+
+      return record;
+    })
+  );
 }
