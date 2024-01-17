@@ -11,7 +11,7 @@ export default function flatfileEventListener(listener: FlatfileListener) {
     "job:ready",
     { job: "workbook:submitActionFg" },
     async ({ context: { jobId, workbookId }, payload }: FlatfileEvent) => {
-      const { data: workbook } = await api.sheets.list({ workbookId });
+      const { data: workbook } = await api.workbooks.get(workbookId);
       const { data: workbookSheets } = await api.sheets.list({
         workbookId,
       });
@@ -57,9 +57,9 @@ export default function flatfileEventListener(listener: FlatfileListener) {
         if (response.status === 200) {
           const rejections: RejectionResponse = response.data.rejections;
           if (rejections) {
-            return await responseRejectionHandler(rejections);
+            await responseRejectionHandler(rejections);
           }
-          return await api.jobs.complete(jobId, {
+          await api.jobs.complete(jobId, {
             outcome: {
               message:
                 "Data was successfully submitted to webhook.site. Go check it out at " +
@@ -67,6 +67,7 @@ export default function flatfileEventListener(listener: FlatfileListener) {
                 ".",
             },
           });
+          return;
         } else {
           throw new Error("Failed to submit data to webhook.site");
         }
