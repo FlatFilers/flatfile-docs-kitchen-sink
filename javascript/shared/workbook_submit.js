@@ -24,8 +24,8 @@ export default function flatfileEventListener(listener) {
           progress: 10,
         })
 
-        const webhookReceiver =
-          'http://localhost:5678/reject-non-flatfile-emails' // TODO: place your webhook url here
+        // TODO: place your webhook url here
+        const webhookReceiver = 'https://webhook.site/...'
 
         const response = await fetch(webhookReceiver, {
           method: 'POST',
