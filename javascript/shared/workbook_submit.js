@@ -5,7 +5,8 @@ export default function flatfileEventListener(listener) {
   listener.on(
     'job:ready',
     { job: 'workbook:submitActionFg' },
-    async ({ context: { jobId, workbookId }, payload }) => {
+    async (event: FlatfileEvent) => {
+      const {jobId, workbookId} = event.context
       const { data: workbook } = await api.workbooks.get(workbookId)
       const { data: workbookSheets } = await api.sheets.list({ workbookId })
 
