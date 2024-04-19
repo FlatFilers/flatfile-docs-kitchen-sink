@@ -46,9 +46,9 @@ export default function flatfileEventListener(listener) {
 
           if (rejections) {
             const outcome = await responseRejectionHandler(rejections)
-            return await api.jobs.complete(jobId, outcome)
+            await api.jobs.complete(jobId, outcome)
           }
-          return await api.jobs.complete(jobId, {
+          await api.jobs.complete(jobId, {
             outcome: {
               message: `Data was successfully submitted to webhook.site. Go check it out at ${webhookReceiver}.`,
             },
@@ -56,6 +56,7 @@ export default function flatfileEventListener(listener) {
         } else {
           throw new Error('Failed to submit data to webhook.site')
         }
+        return
       } catch (error) {
         console.error(error)
         await api.jobs.fail(jobId, {
@@ -64,6 +65,7 @@ export default function flatfileEventListener(listener) {
               "This job failed probably because it couldn't find the webhook.site URL.",
           },
         })
+        return
       }
     }
   )
