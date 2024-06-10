@@ -1,7 +1,7 @@
 import api from "@flatfile/api";
 
 export default function flatfileEventListener(listener) {
-  listener.on("upload:completed", async ({ context: { fileId } }) => {
+  listener.on("file:created", async ({ context: { fileId } }) => {
     const fileName = (await api.files.get(fileId)).data.name;
     const bodyText = `# Welcome
     ### Say hello to your first customer Space in the new Flatfile!
