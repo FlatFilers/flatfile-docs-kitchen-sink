@@ -8,7 +8,6 @@ Rename `.env.example` to `.env` and update to your creds. This file should look 
 
 - FLATFILE_ENVIRONMENT_ID=us_env_1234
 - FLATFILE_API_KEY=sk_1234
-- WEBHOOK_SITE_URL=https://webhook.site/1234
 
 ## Developing
 
