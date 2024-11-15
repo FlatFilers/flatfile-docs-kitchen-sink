@@ -64,9 +64,7 @@ export default function flatfileEventListener(listener) {
       try {
         const { payload } = event.payload;
 
-        const webhookReceiver =
-          process.env.WEBHOOK_SITE_URL ||
-          "https://webhook.site/c83648d4-bf0c-4bb1-acb7-9c170dad4388";
+        const webhookReceiver = await event.secrets("WEBHOOK_SITE_URL"); // TODO: set a Flatfile Secret on your account to point to your webhook
 
         const postResponse = await axios.post(
           webhookReceiver,

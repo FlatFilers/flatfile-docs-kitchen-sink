@@ -5,9 +5,8 @@ import { responseRejectionHandler } from "@flatfile/util-response-rejection";
 import axios from "axios";
 
 export const listener = FlatfileListener.create((listener) => {
+  listener.on("job:ready", { job: "space:configure" }, async (event) => {});
 
-  listener.on('job:ready', {job: 'space:configure'}, async (event)=>{})
-  
   listener.use(
     bulkRecordHook("customers", (records) => {
       const recordHooks = records.map((record) => {
@@ -15,7 +14,7 @@ export const listener = FlatfileListener.create((listener) => {
         return record;
       });
       return recordHooks;
-    }),
+    })
   );
 
   listener.use(
@@ -25,23 +24,22 @@ export const listener = FlatfileListener.create((listener) => {
         const laborCost = record.get("laborCost");
         const totalCostValue = (
           Math.round(
-            (parseFloat(`${partsCost}`) + parseFloat(`${laborCost}`) || 0) *
-              100,
+            (parseFloat(`${partsCost}`) + parseFloat(`${laborCost}`) || 0) * 100
           ) / 100
         ).toFixed(2);
 
         record.set("totalCostOfRepairs", totalCostValue);
         const links = record.getLinks("customerId");
-        console.log(links)
+        console.log(links);
         record.setLinkedValue(
           "totalCostOfRepairs",
           "totalCostOfRepairs",
-          totalCostValue,
+          totalCostValue
         );
         return record;
       });
       return recordHooks;
-    }),
+    })
   );
 
   listener.on(
@@ -62,6 +60,7 @@ export const listener = FlatfileListener.create((listener) => {
       }
 
       try {
+        const webhookReceiver = await event.secrets("WEBHOOK_SITE_URL"); // TODO: set a Flatfile Secret on your account to point to your webhook
         await api.jobs.ack(jobId, {
           info: "Starting job to submit action to webhook.site",
           progress: 10,
@@ -73,7 +72,7 @@ export const listener = FlatfileListener.create((listener) => {
               "No records in Customers found, click the link to go to the sheet and add some data:",
             sheet: sheets[0],
             data: {
-              WEBHOOK_SITE_URL: process.env.WEBHOOK_SITE_URL,
+              WEBHOOK_SITE_URL: webhookReceiver,
             },
           };
         }
@@ -83,14 +82,10 @@ export const listener = FlatfileListener.create((listener) => {
               "No records in Repairs found, click the link to go to the sheet and add some data: ",
             sheet: sheets[1],
             data: {
-              WEBHOOK_SITE_URL: process.env.WEBHOOK_SITE_URL,
+              WEBHOOK_SITE_URL: webhookReceiver,
             },
           };
         }
-
-        const webhookReceiver =
-          process.env.WEBHOOK_SITE_URL ||
-          "https://webhook.site/d61eade4-baa0-49f1-b995-ca138514b1e4";
 
         const response = await axios.post(
           webhookReceiver,
@@ -106,13 +101,15 @@ export const listener = FlatfileListener.create((listener) => {
             headers: {
               "Content-Type": "application/json",
             },
-          },
+          }
         );
 
         if (response.status === 200) {
           const rejections = response.data.rejections;
           if (rejections) {
-            const totalRejectedRecords = await responseRejectionHandler(rejections);
+            const totalRejectedRecords = await responseRejectionHandler(
+              rejections
+            );
             await api.jobs.complete(jobId, {
               outcome: {
                 next: {
@@ -136,7 +133,7 @@ export const listener = FlatfileListener.create((listener) => {
           throw {
             message: "Data was not submitted to webhook.site",
             data: {
-              WEBHOOK_SITE_URL: process.env.WEBHOOK_SITE_URL,
+              WEBHOOK_SITE_URL: webhookReceiver,
             },
           };
         }
@@ -144,7 +141,7 @@ export const listener = FlatfileListener.create((listener) => {
         console.log(`webhook.site[error]:`, JSON.parse(JSON.stringify(error)));
 
         const spaceId = error?.sheet?.id ? error.sheet.id : undefined;
-        const jobBody: Flatfile.JobCompleteDetails  = {
+        const jobBody: Flatfile.JobCompleteDetails = {
           outcome: {
             message: error.message,
             acknowledge: true,
@@ -158,7 +155,7 @@ export const listener = FlatfileListener.create((listener) => {
         }
         await api.jobs.fail(jobId, jobBody);
       }
-    },
+    }
   );
 
   listener.on(
@@ -167,6 +164,6 @@ export const listener = FlatfileListener.create((listener) => {
     async (event) => {
       const { spaceId } = event.context;
       await api.spaces.delete(spaceId);
-    },
+    }
   );
 });
