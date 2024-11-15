@@ -6,7 +6,9 @@ export default function flatfileEventListener(listener) {
   listener.on(
     "job:ready",
     { job: "workbook:submitActionFg" },
-    async ({ context: { jobId, workbookId }, payload }) => {
+    async (event) => {
+      const { jobId, workbookId } = event.context;
+      const payload = event.payload;
       const { data: sheets } = await api.sheets.list({ workbookId });
 
       const records = {};
@@ -22,9 +24,7 @@ export default function flatfileEventListener(listener) {
 
         console.log(JSON.stringify(records, null, 2));
 
-        const webhookReceiver =
-          process.env.WEBHOOK_SITE_URL ||
-          "https://webhook.site/c83648d4-bf0c-4bb1-acb7-9c170dad4388"; //update this
+        const webhookReceiver = await event.secrets("WEBHOOK_SITE_URL"); // TODO: set a Flatfile Secret on your account to point to your webhook
 
         const response = await axios.post(
           webhookReceiver,
